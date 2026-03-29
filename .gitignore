@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# Environment variables
+.env
+.env.example
+# Node (if frontend exists)
+node_modules/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Build / dist
+dist/
+build/
+
+# Metadata / temp
+*.sqlite3
+*.db
+
+# PDF uploads (optional depending on your project)
+docs/
+*.pdf
