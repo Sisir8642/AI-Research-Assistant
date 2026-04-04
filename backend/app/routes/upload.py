@@ -186,6 +186,15 @@ async def upload_pdf(file: UploadFile = File(...)):
         encoding="utf-8",
     )
     logger.info(f"Chunks saved to {chunks_path}")
+    
+     # ── Embed and index chunks into vector store ───────────────────────────
+    try:
+        from app.services.vector_store import index_document_chunks
+        indexed = index_document_chunks(result.document_id)
+        logger.info(f"Indexed {indexed} vectors for {result.document_id}")
+    except Exception as e:
+        logger.error(f"Vector indexing failed: {e}", exc_info=True)
+        # Non-fatal: upload succeeds, but search won't work until re-indexed
 
     return UploadResponse(
         success=True,
@@ -251,6 +260,15 @@ async def delete_document(document_id: str):
     if chunks_path.exists():
         chunks_path.unlink()
         logger.info(f"Deleted chunks: {chunks_path}")
+        
+        # ── NEW: Remove vectors from vector store ──────────────────────────────
+    try:
+        from app.services.vector_store import get_vector_store
+        store = get_vector_store()
+        deleted_vectors = store.delete_document(document_id)
+        logger.info(f"Removed {deleted_vectors} vectors for '{document_id}'")
+    except Exception as e:
+        logger.warning(f"Vector store cleanup failed: {e}")
 
     # Remove from metadata
     del metadata[document_id]
@@ -262,6 +280,20 @@ async def delete_document(document_id: str):
         "document_id": document_id,
     }
 
+
+@router.get(
+    "/vector-store/stats",
+    summary="Vector store statistics",
+    tags=["Upload"],
+)
+async def vector_store_stats():
+    """
+    Return the current state of the vector index:
+    number of vectors, backend type, dimension, etc.
+    """
+    from app.services.vector_store import get_vector_store
+    store = get_vector_store()
+    return store.get_stats()
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 

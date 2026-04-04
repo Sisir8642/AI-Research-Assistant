@@ -95,10 +95,21 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # ── Register routers (will be added in later steps) ───────────────────────────
-# from app.routes import upload, query
+from app.routes import upload          
+app.include_router(                    # ← ADD THIS
+    upload.router,                     # ← ADD THIS
+    prefix="/api/v1",                  # ← ADD THIS
+    tags=["Upload"],                   # ← ADD THIS
+)                                      # ← ADD THIS
+from app.routes import query
 # app.include_router(upload.router, prefix="/api/v1", tags=["Upload"])
 # app.include_router(query.router,  prefix="/api/v1", tags=["Query"])
 
+app.include_router(                           # ← ADD THIS BLOCK
+    query.router,
+    prefix="/api/v1",
+    tags=["Query"],
+)
 
 # ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/", tags=["Health"])
