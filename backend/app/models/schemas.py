@@ -109,3 +109,34 @@ class DocumentInfo(BaseModel):
 class DocumentListResponse(BaseModel):
     documents: list[DocumentInfo]
     total: int
+    
+# ── Summarization Schemas (replace existing stubs) ─────────────────────────────
+
+class SummarizeRequest(BaseModel):
+    document_id: str
+    max_length: Optional[int] = Field(
+        default=500,
+        description="Approximate max word count of the summary.",
+    )
+
+
+class SummarizeResponse(BaseModel):
+    document_id: str
+    filename: str
+    summary: str
+    processing_time_seconds: float
+
+
+# ── Classification Schemas (replace existing stubs) ────────────────────────────
+
+class ClassifyRequest(BaseModel):
+    document_id: str
+
+
+class ClassifyResponse(BaseModel):
+    document_id: str
+    filename: str
+    predicted_category: str
+    confidence: float
+    all_scores: dict[str, float]
+    processing_time_seconds: float

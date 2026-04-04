@@ -101,7 +101,7 @@ app.include_router(                    # ← ADD THIS
     prefix="/api/v1",                  # ← ADD THIS
     tags=["Upload"],                   # ← ADD THIS
 )                                      # ← ADD THIS
-from app.routes import query
+from app.routes import query, analysis 
 # app.include_router(upload.router, prefix="/api/v1", tags=["Upload"])
 # app.include_router(query.router,  prefix="/api/v1", tags=["Query"])
 
@@ -109,6 +109,12 @@ app.include_router(                           # ← ADD THIS BLOCK
     query.router,
     prefix="/api/v1",
     tags=["Query"],
+)
+
+app.include_router(
+    analysis.router,
+    prefix="/api/v1",
+    tags=["Analysis"],
 )
 
 # ── Health check ──────────────────────────────────────────────────────────────
