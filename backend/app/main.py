@@ -33,12 +33,15 @@ async def lifespan(app: FastAPI):   #fastapi lifespan function which executes be
     Code before `yield` runs on startup.
     Code after `yield` runs on shutdown.
     """
-    logger.info("🚀 AI Research Assistant API starting up...")
+    logger.info("=" * 55)
+    logger.info(" AI Research Assistant API starting up...")
     settings.ensure_dirs()
     logger.info(f"📁 Docs directory    : {settings.docs_dir}")
     logger.info(f"📁 Vector DB directory: {settings.vector_db_dir}")
     logger.info(f"🤖 LLM Model         : {settings.groq_model}")
     logger.info(f"🔢 Embedding Model   : {settings.embedding_model}")
+    logger.info(f"  CORS origins  : {settings.allowed_origins_list}")
+    logger.info("=" * 55)
     yield
     logger.info("🛑 AI Research Assistant API shutting down...")
 
@@ -62,8 +65,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["X-Process-Time"],
+
 )
 
 

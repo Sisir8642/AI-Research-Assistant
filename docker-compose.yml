@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+
+  # ── FastAPI Backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rai_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # LLM
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=${GROQ_MODEL:-llama3-8b-8192}
+      # Embeddings
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+      # Vector DB
+      - VECTOR_DB_TYPE=${VECTOR_DB_TYPE:-faiss}
+      # Paths (inside container)
+      - DOCS_DIR=data/docs
+      - VECTOR_DB_DIR=data/vector_db
+      # Chunking
+      - CHUNK_SIZE=${CHUNK_SIZE:-500}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
+      # Retrieval
+      - TOP_K_RESULTS=${TOP_K_RESULTS:-5}
+      # CORS — allow the frontend container
+      - ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
+    volumes:
+      # Persist uploaded PDFs and vector index across container restarts
+      - rai_docs:/app/data/docs
+      - rai_vectors:/app/data/vector_db
+      # HuggingFace model cache — avoid re-downloading on every restart
+      - rai_hf_cache:/home/appuser/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s    # extra time for first HF model download
+    networks:
+      - rai_network
+
+  # ── Next.js Frontend ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:8000
+        - NEXT_PUBLIC_APP_NAME=AI Research Assistant
+    container_name: rai_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - rai_network
+
+# ── Named Volumes ─────────────────────────────────────────────────────────────
+volumes:
+  rai_docs:
+  rai_vectors:
+  rai_hf_cache:
+
+# ── Network ───────────────────────────────────────────────────────────────────
+networks:
+  rai_network:
+    driver: bridge
